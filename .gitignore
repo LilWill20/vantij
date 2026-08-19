@@ -1,0 +1,13 @@
+# dependencies
+node_modules/
+# local secrets (never commit)
+api/local.settings.json
+.env
+# build artifacts
+bin/
+obj/
+*.log
+
+# Working notes and the slide deck are not part of the pushed solution
+docs/
+presentation/

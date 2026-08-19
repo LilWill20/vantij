@@ -1,0 +1,57 @@
+{
+  "creator": {
+    "id": "seed-creator",
+    "name": "Vantij Originals",
+    "role": "creator"
+  },
+  "videos": [
+    {
+      "title": "Big Buck Bunny",
+      "publisher": "Blender Foundation",
+      "producer": "Sacha Goedegebure",
+      "genre": "Comedy",
+      "ageRating": "U",
+      "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"
+    },
+    {
+      "title": "Elephants Dream",
+      "publisher": "Blender Foundation",
+      "producer": "Bassam Kurdali",
+      "genre": "Drama",
+      "ageRating": "PG",
+      "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4"
+    },
+    {
+      "title": "For Bigger Blazes",
+      "publisher": "Google",
+      "producer": "Chromecast",
+      "genre": "Action",
+      "ageRating": "PG",
+      "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4"
+    },
+    {
+      "title": "For Bigger Escapes",
+      "publisher": "Google",
+      "producer": "Chromecast",
+      "genre": "Documentary",
+      "ageRating": "U",
+      "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"
+    },
+    {
+      "title": "For Bigger Fun",
+      "publisher": "Google",
+      "producer": "Chromecast",
+      "genre": "Music",
+      "ageRating": "U",
+      "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4"
+    },
+    {
+      "title": "For Bigger Joyrides",
+      "publisher": "Google",
+      "producer": "Chromecast",
+      "genre": "Sports",
+      "ageRating": "PG",
+      "videoUrl": "https://storage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyrides.mp4"
+    }
+  ]
+}

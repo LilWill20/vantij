@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign in — Vantij</title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <header id="top"></header>
+  <main class="container">
+    <div class="formwrap center">
+      <h2>Sign in to Vantij</h2>
+      <p class="note">Sign in to comment, rate and (for creators) upload. Authentication is handled by Microsoft Entra through Azure Static Web Apps.</p>
+      <p style="margin-top:18px"><button class="btn" onclick="Auth.login()">Sign in with Microsoft</button></p>
+      <p class="note" style="margin-top:18px">New here? Signing in the first time registers you automatically as a <b>consumer</b>. Creator access is granted by an administrator.</p>
+      <p style="margin-top:10px"><a href="/">← Back to videos</a></p>
+    </div>
+  </main>
+  <script src="/js/api.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>Auth.load().then(()=>renderHeader('login'));</script>
+</body>
+</html>

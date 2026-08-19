@@ -1,0 +1,9 @@
+{
+  "name": "vantij-seed",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Seed + admin helpers for Vantij (Cosmos DB)",
+  "dependencies": {
+    "@azure/cosmos": "^4.0.0"
+  }
+}

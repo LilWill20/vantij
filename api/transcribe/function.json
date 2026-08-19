@@ -1,0 +1,13 @@
+{
+  "bindings": [
+    {
+      "authLevel": "anonymous",
+      "type": "httpTrigger",
+      "direction": "in",
+      "name": "req",
+      "methods": ["post", "get"],
+      "route": "videos/{id}/transcribe"
+    },
+    { "type": "http", "direction": "out", "name": "res" }
+  ]
+}
