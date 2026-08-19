@@ -13,16 +13,24 @@ param appName string = 'vantij'
 @description('Location for all resources.')
 param location string = resourceGroup().location
 
+@description('Origins allowed to call the API. Set to the static site URL after the first deployment.')
+param allowedOrigin string = '*'
+
+@description('Signs the sign-in tokens. Pass a long random value.')
+@secure()
+param authSecret string
+
 @description('SKU for the Cognitive Services (F0 = free where available, else S0).')
 @allowed(['F0', 'S0'])
-param cognitiveSku string = 'S0'
+param cognitiveSku string = 'F0'
 
 var suffix = uniqueString(resourceGroup().id)
 var storageName = toLower('${appName}${suffix}')
 var cosmosName = toLower('${appName}-cosmos-${suffix}')
 var speechName = '${appName}-speech-${suffix}'
 var languageName = '${appName}-lang-${suffix}'
-var swaName = '${appName}-web-${suffix}'
+var planName = '${appName}-plan'
+var funcName = '${appName}-api-${suffix}'
 var dbName = 'vantij'
 var videoContainer = 'videos'
 
@@ -102,39 +110,56 @@ resource language 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   properties: { customSubDomainName: languageName }
 }
 
-// ---------------- Static Web App (frontend + managed Functions API) ----------------
-resource swa 'Microsoft.Web/staticSites@2023-12-01' = {
-  name: swaName
+// ---------------- Consumption plan + Function App (the REST API) ----------------
+// Consumption billing means the API scales out per request and costs nothing
+// while nobody is watching, which is the whole point of the serverless shape.
+resource plan 'Microsoft.Web/serverfarms@2023-12-01' = {
+  name: planName
   location: location
-  sku: { name: 'Free', tier: 'Free' }
+  kind: 'functionapp'
+  sku: { name: 'Y1', tier: 'Dynamic' }
+  properties: { reserved: true }      // reserved = Linux
+}
+
+resource api 'Microsoft.Web/sites@2023-12-01' = {
+  name: funcName
+  location: location
+  kind: 'functionapp,linux'
   properties: {
-    // repo is connected after deployment (see DEPLOYMENT_GUIDE) so CI/CD can run
-    buildProperties: {
-      appLocation: 'CW2_Solution/frontend'
-      apiLocation: 'CW2_Solution/api'
+    serverFarmId: plan.id
+    httpsOnly: true
+    siteConfig: {
+      linuxFxVersion: 'Node|20'
+      ftpsState: 'Disabled'
+      minTlsVersion: '1.2'
+      cors: {
+        allowedOrigins: [ allowedOrigin ]
+        supportCredentials: false
+      }
+      appSettings: [
+        { name: 'FUNCTIONS_EXTENSION_VERSION', value: '~4' }
+        { name: 'FUNCTIONS_WORKER_RUNTIME', value: 'node' }
+        { name: 'WEBSITE_NODE_DEFAULT_VERSION', value: '~20' }
+        { name: 'AzureWebJobsStorage', value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}' }
+        { name: 'COSMOS_ENDPOINT', value: cosmos.properties.documentEndpoint }
+        { name: 'COSMOS_KEY', value: cosmos.listKeys().primaryMasterKey }
+        { name: 'COSMOS_DATABASE', value: dbName }
+        { name: 'STORAGE_ACCOUNT', value: storage.name }
+        { name: 'STORAGE_KEY', value: storage.listKeys().keys[0].value }
+        { name: 'VIDEO_CONTAINER', value: videoContainer }
+        { name: 'SPEECH_KEY', value: speech.listKeys().key1 }
+        { name: 'SPEECH_REGION', value: location }
+        { name: 'LANGUAGE_ENDPOINT', value: language.properties.endpoint }
+        { name: 'LANGUAGE_KEY', value: language.listKeys().key1 }
+        { name: 'AUTH_SECRET', value: authSecret }
+        { name: 'LIST_CACHE_SECONDS', value: '20' }
+      ]
     }
   }
 }
 
-// wire the API to the backing services via app settings
-resource swaSettings 'Microsoft.Web/staticSites/config@2023-12-01' = {
-  parent: swa
-  name: 'appsettings'
-  properties: {
-    COSMOS_ENDPOINT: cosmos.properties.documentEndpoint
-    COSMOS_KEY: cosmos.listKeys().primaryMasterKey
-    COSMOS_DATABASE: dbName
-    STORAGE_ACCOUNT: storage.name
-    STORAGE_KEY: storage.listKeys().keys[0].value
-    VIDEO_CONTAINER: videoContainer
-    SPEECH_KEY: speech.listKeys().key1
-    SPEECH_REGION: location
-    LANGUAGE_ENDPOINT: language.properties.endpoint
-    LANGUAGE_KEY: language.listKeys().key1
-  }
-}
-
-output staticWebAppName string = swa.name
-output staticWebAppUrl string = 'https://${swa.properties.defaultHostname}'
-output cosmosEndpoint string = cosmos.properties.documentEndpoint
+output apiName string = api.name
+output apiUrl string = 'https://${api.properties.defaultHostName}'
 output storageAccount string = storage.name
+output cosmosEndpoint string = cosmos.properties.documentEndpoint
+output staticSiteHint string = 'Enable static website on ${storage.name}, then read primaryEndpoints.web'

@@ -3,7 +3,7 @@
   "contentVersion": "1.0.0.0",
   "parameters": {
     "appName": { "value": "vantij" },
-    "location": { "value": "uksouth" },
-    "cognitiveSku": { "value": "S0" }
+    "cognitiveSku": { "value": "F0" },
+    "allowedOrigin": { "value": "*" }
   }
 }

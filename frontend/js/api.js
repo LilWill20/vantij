@@ -1,11 +1,36 @@
-// Thin REST client for the Functions backend. Everything is same-origin under
-// /api, so the browser sends the auth cookie automatically.
+// REST client for the Functions backend.
+//
+// The site is served from Blob Storage static website hosting and the API runs
+// as a separate Function App, so calls are cross-origin and the base URL is
+// read from config.json at start-up rather than being baked into the build.
+// Sign-in produces a token, which is sent as a bearer header on every request.
 const API = {
+  base: "",
+  TOKEN_KEY: "vantij.token",
+
+  async loadConfig() {
+    try {
+      const res = await fetch("config.json", { cache: "no-store" });
+      if (res.ok) {
+        const cfg = await res.json();
+        this.base = (cfg.apiBaseUrl || "").replace(/\/$/, "");
+      }
+    } catch (e) {
+      this.base = "";
+    }
+  },
+
+  token()          { return localStorage.getItem(this.TOKEN_KEY) || ""; },
+  setToken(value)  { value ? localStorage.setItem(this.TOKEN_KEY, value) : localStorage.removeItem(this.TOKEN_KEY); },
+
   async _fetch(path, opts = {}) {
-    const res = await fetch("/api" + path, {
-      headers: { "Content-Type": "application/json", ...(opts.headers || {}) },
-      ...opts
-    });
+    const headers = { "Content-Type": "application/json", ...(opts.headers || {}) };
+    const token = this.token();
+    if (token) headers.Authorization = "Bearer " + token;
+
+    const res = await fetch(this.base + "/api" + path, { ...opts, headers });
+
+    if (res.status === 401) this.setToken("");
     if (!res.ok) {
       let msg = res.statusText;
       try { const j = await res.json(); msg = j.error || msg; } catch (e) {}
@@ -14,6 +39,18 @@ const API = {
     if (res.status === 204) return null;
     return res.json();
   },
+
+  register(name, email, password) {
+    return this._fetch("/accounts/register", {
+      method: "POST", body: JSON.stringify({ name, email, password }),
+    });
+  },
+  login(email, password) {
+    return this._fetch("/accounts/login", {
+      method: "POST", body: JSON.stringify({ email, password }),
+    });
+  },
+
   me()                       { return this._fetch("/me"); },
   listVideos(search, genre)  {
     const q = new URLSearchParams();
@@ -31,7 +68,8 @@ const API = {
   getRating(id)              { return this._fetch("/videos/" + id + "/ratings"); },
   setRating(id, value)       { return this._fetch("/videos/" + id + "/ratings", { method: "POST", body: JSON.stringify({ value }) }); },
 
-  // upload the file straight to Blob Storage using the SAS URL from createVideo()
+  // the file goes straight to Blob Storage with the signed URL from createVideo,
+  // so a large upload never travels through the API
   async uploadToBlob(uploadUrl, file, onProgress) {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();

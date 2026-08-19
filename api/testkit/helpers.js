@@ -13,20 +13,17 @@ function bodyOf(context) {
   return context.res && context.res.body ? JSON.parse(context.res.body) : undefined;
 }
 
-// Builds the header Static Web Apps puts on every authenticated request.
-function principal({ id = "u1", name = "Sam", roles = ["authenticated"] } = {}) {
-  const payload = {
-    userId: id,
-    userDetails: name,
-    userRoles: roles,
-    identityProvider: "aad",
-  };
-  return Buffer.from(JSON.stringify(payload), "utf8").toString("base64");
+// Signs a real token with the same code the API uses, so the tests exercise
+// the actual verification path rather than a stand-in.
+const { issueToken } = require("../shared/auth");
+
+function tokenFor({ id = "u1", name = "Sam", role = "consumer" } = {}) {
+  return issueToken({ id, name, role });
 }
 
 function req({ method = "GET", body = null, query = {}, user = null } = {}) {
   const headers = {};
-  if (user) headers["x-ms-client-principal"] = principal(user);
+  if (user) headers.authorization = "Bearer " + tokenFor(user);
   return { method, body, query, headers };
 }
 
@@ -94,4 +91,4 @@ function loadHandler(name, stubs = {}) {
   return { handler, cleanup: () => unstub([...applied, handlerPath]) };
 }
 
-module.exports = { fakeContext, bodyOf, principal, req, fakeCosmos, loadHandler };
+module.exports = { fakeContext, bodyOf, tokenFor, req, fakeCosmos, loadHandler };

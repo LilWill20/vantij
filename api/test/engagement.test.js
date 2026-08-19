@@ -24,7 +24,7 @@ function ratings() {
   return { handler, cleanup, cosmos };
 }
 
-const VIEWER = { id: "u1", name: "Sam", roles: ["authenticated"] };
+const VIEWER = { id: "u1", name: "Sam", role: "consumer" };
 
 /* ---------------------------------------------------------------- comments */
 

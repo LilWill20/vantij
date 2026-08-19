@@ -14,7 +14,7 @@ function renderGenres() {
   el.innerHTML = `<span class="tag ${cur ? '' : 'age'}" onclick="pickGenre('')">All</span> ` +
     GENRES.map(g => `<span class="tag ${cur===g?'age':''}" onclick="pickGenre('${g}')">${g}</span>`).join(" ");
 }
-function pickGenre(g){ const q=getParam("search"); const p=new URLSearchParams(); if(q)p.set("search",q); if(g)p.set("genre",g); location.href="/?"+p.toString(); }
+function pickGenre(g){ const q=getParam("search"); const p=new URLSearchParams(); if(q)p.set("search",q); if(g)p.set("genre",g); location.href="index.html?"+p.toString(); }
 
 async function loadVideos() {
   const grid = document.getElementById("grid");

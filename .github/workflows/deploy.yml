@@ -1,0 +1,114 @@
+name: Vantij build and deploy
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Install dependencies
+        working-directory: api
+        run: npm install
+
+      - name: Run the API test suite
+        working-directory: api
+        run: npm test
+
+      - name: Check the browser code parses
+        run: |
+          for file in frontend/js/*.js; do
+            node --check "$file"
+          done
+
+  deploy-api:
+    name: Deploy the API
+    needs: test
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+
+      - name: Install production dependencies
+        working-directory: api
+        run: npm install --omit=dev
+
+      - name: Publish to the Function App
+        uses: Azure/functions-action@v1
+        with:
+          app-name: ${{ secrets.AZURE_FUNCTIONAPP_NAME }}
+          package: api
+          publish-profile: ${{ secrets.AZURE_FUNCTIONAPP_PUBLISH_PROFILE }}
+
+  deploy-site:
+    name: Publish the static site
+    needs: deploy-api
+    if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    env:
+      ACCOUNT: ${{ secrets.AZURE_STORAGE_ACCOUNT }}
+      KEY: ${{ secrets.AZURE_STORAGE_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Point the site at the deployed API
+        run: |
+          cat > frontend/config.json <<JSON
+          {
+            "apiBaseUrl": "https://${{ secrets.AZURE_FUNCTIONAPP_NAME }}.azurewebsites.net",
+            "environmentLabel": "azure"
+          }
+          JSON
+          cat frontend/config.json
+
+      - name: Turn on static website hosting
+        run: |
+          az storage blob service-properties update \
+            --account-name "$ACCOUNT" \
+            --account-key "$KEY" \
+            --static-website \
+            --index-document index.html \
+            --404-document index.html
+
+      - name: Upload the site
+        run: |
+          az storage blob upload-batch \
+            --account-name "$ACCOUNT" \
+            --account-key "$KEY" \
+            --destination '$web' \
+            --source frontend \
+            --overwrite
+
+      - name: Stop the browser caching the entry points
+        run: |
+          for file in index.html config.json; do
+            az storage blob update \
+              --account-name "$ACCOUNT" \
+              --account-key "$KEY" \
+              --container-name '$web' \
+              --name "$file" \
+              --content-cache-control 'no-cache, must-revalidate'
+          done
+
+      - name: Confirm the site is published
+        run: |
+          ENABLED=$(az storage blob service-properties show \
+            --account-name "$ACCOUNT" \
+            --account-key "$KEY" \
+            --query 'staticWebsite.enabled' -o tsv)
+          echo "Static website hosting enabled: $ENABLED"

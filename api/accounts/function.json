@@ -6,7 +6,7 @@
       "direction": "in",
       "name": "req",
       "methods": ["post"],
-      "route": "GetRoles"
+      "route": "accounts/{action}"
     },
     { "type": "http", "direction": "out", "name": "res" }
   ]

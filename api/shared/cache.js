@@ -3,8 +3,8 @@
 // Two layers, and they do different jobs:
 //   1. This in-process store spares Cosmos DB when one Function instance is
 //      handling a burst of identical requests.
-//   2. The Cache-Control header lets the Static Web Apps edge and the browser
-//      answer repeat requests without reaching the API at all.
+//   2. The Cache-Control header lets the browser and any cache in front of the
+//      API answer repeat requests without reaching a function at all.
 //
 // The list is dropped whenever a video is created, so a new upload shows up
 // immediately rather than after the window expires.

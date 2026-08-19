@@ -103,7 +103,7 @@ test("uploading requires signing in", async () => {
 test("a consumer cannot upload", async () => {
   const { handler, cleanup } = setup();
   const ctx = fakeContext();
-  await handler(ctx, req({ method: "POST", body: DRAFT, user: { roles: ["authenticated"] } }));
+  await handler(ctx, req({ method: "POST", body: DRAFT, user: { role: "consumer" } }));
   cleanup();
   assert.equal(ctx.res.status, 403);
   assert.match(bodyOf(ctx).error, /creator/i);
@@ -114,7 +114,7 @@ test("a creator gets a record and a write-only upload URL", async () => {
   const ctx = fakeContext();
   await handler(ctx, req({
     method: "POST", body: DRAFT,
-    user: { id: "c1", name: "Harbour Films", roles: ["authenticated", "creator"] },
+    user: { id: "c1", name: "Harbour Films", role: "creator" },
   }));
   cleanup();
   assert.equal(ctx.res.status, 201);
@@ -129,7 +129,7 @@ test("every metadata field the brief names is stored", async () => {
   const ctx = fakeContext();
   await handler(ctx, req({
     method: "POST", body: DRAFT,
-    user: { id: "c1", roles: ["authenticated", "creator"] },
+    user: { id: "c1", role: "creator" },
   }));
   cleanup();
   const v = bodyOf(ctx).video;
@@ -145,7 +145,7 @@ test("a title is required", async () => {
   const ctx = fakeContext();
   await handler(ctx, req({
     method: "POST", body: { ...DRAFT, title: "   " },
-    user: { id: "c1", roles: ["authenticated", "creator"] },
+    user: { id: "c1", role: "creator" },
   }));
   cleanup();
   assert.equal(ctx.res.status, 400);
@@ -156,7 +156,7 @@ test("an unsupported file type is refused", async () => {
   const ctx = fakeContext();
   await handler(ctx, req({
     method: "POST", body: { ...DRAFT, fileName: "notes.pdf" },
-    user: { id: "c1", roles: ["authenticated", "creator"] },
+    user: { id: "c1", role: "creator" },
   }));
   cleanup();
   assert.equal(ctx.res.status, 400);
@@ -168,7 +168,7 @@ test("an invented age rating is refused", async () => {
   const ctx = fakeContext();
   await handler(ctx, req({
     method: "POST", body: { ...DRAFT, ageRating: "X" },
-    user: { id: "c1", roles: ["authenticated", "creator"] },
+    user: { id: "c1", role: "creator" },
   }));
   cleanup();
   assert.equal(ctx.res.status, 400);
@@ -179,7 +179,7 @@ test("an unknown genre falls back rather than being stored raw", async () => {
   const ctx = fakeContext();
   await handler(ctx, req({
     method: "POST", body: { ...DRAFT, genre: "<script>" },
-    user: { id: "c1", roles: ["authenticated", "creator"] },
+    user: { id: "c1", role: "creator" },
   }));
   cleanup();
   assert.equal(bodyOf(ctx).video.genre, "Other");
@@ -190,7 +190,7 @@ test("a new upload starts as uploading, not ready", async () => {
   const ctx = fakeContext();
   await handler(ctx, req({
     method: "POST", body: DRAFT,
-    user: { id: "c1", roles: ["authenticated", "creator"] },
+    user: { id: "c1", role: "creator" },
   }));
   cleanup();
   assert.equal(bodyOf(ctx).video.status, "uploading");
@@ -239,7 +239,7 @@ test("publishing a video clears the dashboard cache", async () => {
 
   await handler(fakeContext(), req({
     method: "POST", body: DRAFT,
-    user: { id: "c1", roles: ["authenticated", "creator"] },
+    user: { id: "c1", role: "creator" },
   }));
 
   cosmos.state.lastQuery = null;

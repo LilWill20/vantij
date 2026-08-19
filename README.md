@@ -20,18 +20,19 @@ producers and the spoken transcript.
 
 ## How it is put together
 
-The front end is static HTML, CSS and JavaScript hosted on Azure Static Web
-Apps. It talks to the backend over REST.
+The front end is static HTML, CSS and JavaScript, served straight from Azure
+Blob Storage static website hosting. No server renders a page. It talks to the
+backend over REST.
 
-The backend is a set of Azure Functions, managed by the same Static Web App, so
-the API scales per request and costs nothing while idle.
+The backend is a set of Azure Functions on a consumption plan, so the API scales
+out per request and costs nothing while nobody is watching.
 
 Data is split between two stores: Azure Cosmos DB for accounts, clips, comments
 and ratings, and Azure Blob Storage for the video files themselves.
 
-Sign-in is handled by Microsoft Entra ID through the platform's built-in
-authentication. The role is read from the database on every sign-in and checked
-again on the server for every write.
+Accounts live in Cosmos DB. Passwords are stored as scrypt hashes, signing in
+returns a signed token, and the role is read from the database and checked on the
+server for every write.
 
 Uploads go straight from the browser to Blob Storage using a short-lived signed
 URL, so video never travels through the API.
@@ -44,15 +45,15 @@ the edge, and it is dropped as soon as a new clip is published.
 
 ## Running it locally
 
-The Static Web Apps CLI emulates the platform, including sign-in.
+The Azure Functions Core Tools run the API, and any static server will do for
+the front end.
 
 ```
-npm install -g @azure/static-web-apps-cli
-cd api && npm install && cd ..
-swa start frontend --api-location api
+cd api && npm install && npm start
 ```
 
-Then open http://localhost:4280
+The API comes up on http://localhost:7071. Serve `frontend` with anything
+static and set `apiBaseUrl` in `frontend/config.json` to that address.
 
 Copy `api/local.settings.json.example` to `api/local.settings.json` and fill in
 the connection details first.
@@ -67,7 +68,7 @@ npm test
 ## Layout
 
 ```
-frontend/   the static site and its Static Web Apps configuration
+frontend/   the static site, plus config.json which points it at the API
 api/        the Functions that make up the REST API
   shared/   database, storage, auth, cache and AI helpers
   test/     the test suite

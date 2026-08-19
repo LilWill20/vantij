@@ -9,16 +9,89 @@
 <body>
   <header id="top"></header>
   <main class="container">
-    <div class="formwrap center">
-      <h2>Sign in to Vantij</h2>
-      <p class="note">Sign in to comment, rate and (for creators) upload. Authentication is handled by Microsoft Entra through Azure Static Web Apps.</p>
-      <p style="margin-top:18px"><button class="btn" onclick="Auth.login()">Sign in with Microsoft</button></p>
-      <p class="note" style="margin-top:18px">New here? Signing in the first time registers you automatically as a <b>consumer</b>. Creator access is granted by an administrator.</p>
-      <p style="margin-top:10px"><a href="/">← Back to videos</a></p>
+    <div class="formwrap">
+      <h2 id="formTitle">Sign in to Vantij</h2>
+      <p class="note" id="formLead">
+        Signing in lets you comment and rate. Uploading is for creator accounts,
+        which an administrator grants.
+      </p>
+
+      <div id="msg"></div>
+
+      <form id="authForm" onsubmit="return submitForm(event)">
+        <div class="field" id="nameField" hidden>
+          <label for="name">Display name</label>
+          <input id="name" name="name" autocomplete="name">
+        </div>
+        <div class="field">
+          <label for="email">Email address</label>
+          <input id="email" name="email" type="email" autocomplete="email" required>
+        </div>
+        <div class="field">
+          <label for="password">Password</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" required>
+        </div>
+        <button class="btn" id="submitBtn" type="submit">Sign in</button>
+      </form>
+
+      <p class="note" style="margin-top:18px">
+        <span id="switchText">New here?</span>
+        <a href="#" id="switchLink" onclick="return toggleMode()">Create an account</a>
+      </p>
+      <p style="margin-top:10px"><a href="index.html">Back to the videos</a></p>
     </div>
   </main>
+
   <script src="/js/api.js"></script>
   <script src="/js/auth.js"></script>
-  <script>Auth.load().then(()=>renderHeader('login'));</script>
+  <script>
+    let mode = "login";
+
+    function toggleMode() {
+      mode = mode === "login" ? "register" : "login";
+      const registering = mode === "register";
+      document.getElementById("nameField").hidden = !registering;
+      document.getElementById("name").required = registering;
+      document.getElementById("formTitle").textContent = registering ? "Create an account" : "Sign in to Vantij";
+      document.getElementById("submitBtn").textContent = registering ? "Create account" : "Sign in";
+      document.getElementById("password").autocomplete = registering ? "new-password" : "current-password";
+      document.getElementById("switchText").textContent = registering ? "Already have an account?" : "New here?";
+      document.getElementById("switchLink").textContent = registering ? "Sign in instead" : "Create an account";
+      document.getElementById("formLead").textContent = registering
+        ? "New accounts can browse, search, play, comment and rate. Uploading is for creators only."
+        : "Signing in lets you comment and rate. Uploading is for creator accounts, which an administrator grants.";
+      say("");
+      return false;
+    }
+
+    function say(text, kind) {
+      document.getElementById("msg").innerHTML =
+        text ? `<div class="msg ${kind || "err"}">${escapeHtml(text)}</div>` : "";
+    }
+
+    async function submitForm(e) {
+      e.preventDefault();
+      const button = document.getElementById("submitBtn");
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+      const name = document.getElementById("name").value.trim();
+      button.disabled = true;
+      say("");
+      try {
+        if (mode === "register") await Auth.signUp(name, email, password);
+        else await Auth.signIn(email, password);
+        location.href = "index.html";
+      } catch (err) {
+        say(err.message || "That did not work, please try again.");
+        button.disabled = false;
+      }
+      return false;
+    }
+
+    Auth.load().then(() => {
+      renderHeader("login");
+      if (Auth.isAuthed()) location.href = "index.html";
+    });
+  </script>
 </body>
 </html>
