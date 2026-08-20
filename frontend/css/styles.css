@@ -50,11 +50,12 @@ header {
 .nav { display: flex; align-items: center; gap: 18px; height: 64px; }
 .logo { font-weight: 700; font-size: 19px; letter-spacing: -0.3px; color: var(--ink); }
 .logo b { color: var(--brand); font-weight: 700; }
-.nav .grow { flex: 1; }
+.nav .grow { flex: 1 1 0; min-width: 0; }
 
-.search { display: flex; gap: 8px; flex: 1; max-width: 420px; }
+.search { display: flex; gap: 8px; flex: 1 1 460px; max-width: 460px; min-width: 210px; }
 .search input {
   flex: 1;
+  min-width: 0;
   background: var(--card);
   border: 1px solid var(--rule);
   color: var(--ink);
@@ -270,4 +271,27 @@ video {
 .msg.err { background: #fbeceb; color: var(--neg); border-color: #eecac7; }
 
 .center { text-align: center; }
-.empty { color: var(--ink-2); padding: 44px; text-align: center; }
+.empty {
+  grid-column: 1 / -1;
+  color: var(--ink-2);
+  padding: 42px 24px;
+  text-align: center;
+  background: var(--card);
+  border: 1px dashed var(--rule);
+  border-radius: var(--radius);
+}
+.empty strong {
+  display: block;
+  color: var(--ink);
+  font-size: 16.5px;
+  font-weight: 600;
+  margin-bottom: 5px;
+}
+
+.foot {
+  border-top: 1px solid var(--rule);
+  margin-top: 30px;
+  padding: 17px 0 26px;
+  color: var(--ink-3);
+  font-size: 12.5px;
+}

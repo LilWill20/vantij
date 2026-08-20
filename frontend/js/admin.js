@@ -27,7 +27,7 @@ function formHtml() {
       <div class="field"><label>Genre</label><select id="genre">${GENRES.map(g=>`<option>${g}</option>`).join("")}</select></div>
       <div class="field"><label>Age rating</label><select id="age">${AGES.map(a=>`<option ${a==='PG'?'selected':''}>${a}</option>`).join("")}</select></div>
     </div>
-    <div class="field"><label>Video file * (mp4 / webm / mov)</label><input id="file" type="file" accept="video/mp4,video/webm,video/quicktime"></div>
+    <div class="field"><label>Video file * (mp4 / webm / mov / m4v)</label><input id="file" type="file" accept=".mp4,.webm,.mov,.m4v,video/mp4,video/webm,video/quicktime,video/x-m4v"></div>
     <div class="progress"><i id="bar"></i></div>
     <div style="margin-top:14px"><button class="btn" id="go" onclick="publish()">Upload &amp; publish</button></div>
   </div>`;
