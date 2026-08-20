@@ -49,7 +49,10 @@ async function speechSubmit(contentUrl, displayName, locale = "en-GB") {
       properties: { wordLevelTimestampsEnabled: false, punctuationMode: "DictatedAndAutomatic" }
     })
   });
-  if (!res.ok) return null;
+  if (!res.ok) {
+    console.error("Speech rejected the transcription job", res.status, await res.text());
+    return null;
+  }
   const data = await res.json();
   return data.self || null;
 }

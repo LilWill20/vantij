@@ -108,7 +108,7 @@ async function pollTranscript(tries = 0) {
   try {
     const r = await API.transcribe(VID.id);
     if (r.status === "done") { box.textContent = r.transcript || "(no speech detected)"; status.textContent=""; return; }
-    if (r.status === "unavailable") { status.textContent = "(not configured)"; box.textContent="—"; return; }
+    if (r.status === "unavailable") { status.textContent = "(unavailable)"; box.textContent="—"; return; }
     if (r.status === "failed") { status.textContent = "(failed)"; return; }
     status.textContent = "generating…";
     if (tries < 20) setTimeout(() => pollTranscript(tries + 1), 6000);
