@@ -85,6 +85,18 @@ jobs:
             --index-document index.html \
             --404-document index.html
 
+      - name: Let the browser upload straight to storage
+        env:
+          ORIGIN: ${{ secrets.SITE_ORIGIN }}
+        run: |
+          if [ -z "$ORIGIN" ]; then
+            echo "SITE_ORIGIN is not set, so the blob CORS rule was left alone."
+            exit 0
+          fi
+          az storage cors clear --services b             --account-name "$ACCOUNT" --account-key "$KEY"
+          az storage cors add             --services b             --methods GET HEAD PUT OPTIONS             --origins "$ORIGIN"             --allowed-headers '*'             --exposed-headers '*'             --max-age 3600             --account-name "$ACCOUNT" --account-key "$KEY"
+          az storage cors list --services b             --account-name "$ACCOUNT" --account-key "$KEY" -o table
+
       - name: Upload the site
         run: |
           az storage blob upload-batch \

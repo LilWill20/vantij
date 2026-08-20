@@ -20,9 +20,13 @@ param allowedOrigin string = '*'
 @secure()
 param authSecret string
 
-@description('SKU for the Cognitive Services (F0 = free where available, else S0).')
+@description('SKU for Azure AI Language. F0 is free and is enough for sentiment.')
 @allowed(['F0', 'S0'])
 param cognitiveSku string = 'F0'
+
+@description('SKU for Azure AI Speech. Batch transcription rejects F0 with "Only Standard subscriptions are valid", so this has to be S0.')
+@allowed(['F0', 'S0'])
+param speechSku string = 'S0'
 
 var suffix = uniqueString(resourceGroup().id)
 var storageName = toLower('${appName}${suffix}')
@@ -97,7 +101,7 @@ resource speech 'Microsoft.CognitiveServices/accounts@2023-05-01' = {
   name: speechName
   location: location
   kind: 'SpeechServices'
-  sku: { name: cognitiveSku }
+  sku: { name: speechSku }
   properties: { customSubDomainName: speechName }
 }
 
