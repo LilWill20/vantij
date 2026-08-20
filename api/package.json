@@ -2,7 +2,6 @@
   "name": "vantij-api",
   "version": "1.0.0",
   "description": "COM769 CW2 - REST backend (Azure Functions) for the Vantij video-sharing app",
-  "main": "index.js",
   "scripts": {
     "start": "func start",
     "test": "node --test"
@@ -12,6 +11,6 @@
     "@azure/storage-blob": "^12.17.0"
   },
   "engines": {
-    "node": ">=18"
+    "node": ">=20"
   }
 }

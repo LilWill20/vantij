@@ -129,7 +129,7 @@ resource api 'Microsoft.Web/sites@2023-12-01' = {
     serverFarmId: plan.id
     httpsOnly: true
     siteConfig: {
-      linuxFxVersion: 'Node|20'
+      linuxFxVersion: 'Node|22'
       ftpsState: 'Disabled'
       minTlsVersion: '1.2'
       cors: {
@@ -139,8 +139,13 @@ resource api 'Microsoft.Web/sites@2023-12-01' = {
       appSettings: [
         { name: 'FUNCTIONS_EXTENSION_VERSION', value: '~4' }
         { name: 'FUNCTIONS_WORKER_RUNTIME', value: 'node' }
-        { name: 'WEBSITE_NODE_DEFAULT_VERSION', value: '~20' }
+        { name: 'WEBSITE_NODE_DEFAULT_VERSION', value: '~22' }
         { name: 'AzureWebJobsStorage', value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}' }
+        // A consumption plan keeps the function content on a file share, and it
+        // will not start without these two. Leaving them out gives a host that
+        // lists its functions but answers every call with a 503.
+        { name: 'WEBSITE_CONTENTAZUREFILECONNECTIONSTRING', value: 'DefaultEndpointsProtocol=https;AccountName=${storage.name};AccountKey=${storage.listKeys().keys[0].value};EndpointSuffix=${environment().suffixes.storage}' }
+        { name: 'WEBSITE_CONTENTSHARE', value: toLower(funcName) }
         { name: 'COSMOS_ENDPOINT', value: cosmos.properties.documentEndpoint }
         { name: 'COSMOS_KEY', value: cosmos.listKeys().primaryMasterKey }
         { name: 'COSMOS_DATABASE', value: dbName }
